@@ -52,8 +52,8 @@ evalStmt env (WhileStmt expr stmt) =
 	evalExpr env expr >> evalStmt env stmt
 evalStmt env (DoWhileStmt stmt expr) =
 	evalStmt env stmt >> evalExpr env expr
-evalStmt env forstmt =
-	evalFor env forstmt
+evalStmt env (ForStmt init test increment body) =
+	evalFor env (ForStmt init test increment body)
 evalStmt env (FunctionStmt id [] block) =
 	varDecl env (VarDecl id Nothing) >> evalStmt env (BlockStmt block)
 evalStmt env (FunctionStmt id (arg:args) block) =
@@ -140,7 +140,7 @@ evalFor env (ForStmt (VarInit decls) (Just expr1) (Just expr2) stmt) =
 	evalStmt env (VarDeclStmt decls) >> evalExpr env expr1 >> evalExpr env expr2 >> evalStmt env stmt
 evalFor env (ForStmt (ExprInit exprinit) (Just expr1) (Just expr2) stmt) =
 	evalExpr env exprinit >> evalExpr env expr1 >> evalExpr env expr2 >> evalStmt env stmt
-evalFor env ow = return Nil
+--evalFor env ow = return Nil
 
 --
 -- Types and boilerplate
