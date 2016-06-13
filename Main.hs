@@ -24,7 +24,16 @@ evalExpr env (AssignExpr OpAssign (LVar var) expr) = do
     setVar var e
 evalExpr env (FuncExpr Nothing args block) = return $ Func "" (map show args)
 evalExpr env (FuncExpr (Just (Id str)) args block) = return $ Func str (map show args)
-	
+
+evalExpr env (ArrayLit (a:xs)) = do
+  result <- evalExpr env a
+  (List list)  <- evalExpr env (ArrayLit xs)
+  return $ List (result:list)
+evalExpr env (ArrayLit [a]) = do
+  result <- evalExpr env a
+  return $ List [result]
+evalExpr env (ArrayLit []) = return $ List []
+
 
 evalStmt :: StateT -> Statement -> StateTransformer Value
 evalStmt env EmptyStmt = return Nil
@@ -39,9 +48,9 @@ evalStmt env (IfStmt expr stmt1 stmt2) =
 evalStmt env (BlockStmt []) = return Nil
 evalStmt env (BlockStmt (stmt:stmts)) =
 	evalStmt env stmt >> evalStmt env (BlockStmt stmts)
-evalStmt env (WhileStmt expr stmt) = 
+evalStmt env (WhileStmt expr stmt) =
 	evalExpr env expr >> evalStmt env stmt
-evalStmt env (DoWhileStmt stmt expr) = 
+evalStmt env (DoWhileStmt stmt expr) =
 	evalStmt env stmt >> evalExpr env expr
 evalStmt env forstmt =
 	evalFor env forstmt
@@ -49,7 +58,7 @@ evalStmt env (FunctionStmt id [] block) =
 	varDecl env (VarDecl id Nothing) >> evalStmt env (BlockStmt block)
 evalStmt env (FunctionStmt id (arg:args) block) =
 	varDecl env (VarDecl id (Just (FuncExpr (Just id) (arg:args) block))) >> varDecl env (VarDecl arg Nothing) >> evalStmt env (FunctionStmt id args block) >> evalStmt env (BlockStmt block)
-	
+
 --loop ou case
 --evalStmt env (BrealStmt Nothing)
 --evalStmt env (BrealStmt (Just id))
@@ -113,13 +122,13 @@ evalFor env (ForStmt (VarInit decls) Nothing Nothing stmt) =
 	evalStmt env (VarDeclStmt decls) >> evalStmt env stmt
 evalFor env (ForStmt (ExprInit expr) Nothing Nothing stmt) =
 	evalExpr env expr >> evalStmt env stmt
-evalFor env (ForStmt NoInit (Just expr) Nothing stmt) = 
+evalFor env (ForStmt NoInit (Just expr) Nothing stmt) =
 	evalExpr env expr >> evalStmt env stmt
 evalFor env (ForStmt (VarInit decls) (Just expr) Nothing stmt) =
 	evalStmt env (VarDeclStmt decls) >> evalExpr env expr >> evalStmt env stmt
 evalFor env (ForStmt (ExprInit exprinit) (Just expr) Nothing stmt) =
 	evalExpr env exprinit >> evalExpr env expr >> evalStmt env stmt
-evalFor env (ForStmt NoInit Nothing (Just expr) stmt) = 
+evalFor env (ForStmt NoInit Nothing (Just expr) stmt) =
 	evalExpr env expr >> evalStmt env stmt
 evalFor env (ForStmt (VarInit decls) Nothing (Just expr) stmt) =
 	evalStmt env (VarDeclStmt decls) >> evalExpr env expr >> evalStmt env stmt
