@@ -40,6 +40,8 @@ evalStmt env (WhileStmt expr stmt) =
 	evalExpr env expr >> evalStmt env stmt
 evalStmt env (DoWhileStmt stmt expr) = 
 	evalStmt env stmt >> evalExpr env expr
+evalStmt env forstmt = evalFor env forstmt
+	
 --loop ou case
 --evalStmt env (BrealStmt Nothing)
 --evalStmt env (BrealStmt (Just id))
@@ -94,6 +96,33 @@ varDecl env (VarDecl (Id id) maybeExpr) = do
 
 setVar :: String -> Value -> StateTransformer Value
 setVar var val = ST $ \s -> (val, insert var val s)
+
+--cada caso do For
+evalFor :: StateT -> Statement -> StateTransformer Value
+evalFor env (ForStmt NoInit Nothing Nothing stmt) =
+	evalStmt env stmt
+evalFor env (ForStmt (VarInit decls) Nothing Nothing stmt) =
+	evalStmt env (VarDeclStmt decls) >> evalStmt env stmt
+evalFor env (ForStmt (ExprInit expr) Nothing Nothing stmt) =
+	evalExpr env expr >> evalStmt env stmt
+evalFor env (ForStmt NoInit (Just expr) Nothing stmt) = 
+	evalExpr env expr >> evalStmt env stmt
+evalFor env (ForStmt (VarInit decls) (Just expr) Nothing stmt) =
+	evalStmt env (VarDeclStmt decls) >> evalExpr env expr >> evalStmt env stmt
+evalFor env (ForStmt (ExprInit exprinit) (Just expr) Nothing stmt) =
+	evalExpr env exprinit >> evalExpr env expr >> evalStmt env stmt
+evalFor env (ForStmt NoInit Nothing (Just expr) stmt) = 
+	evalExpr env expr >> evalStmt env stmt
+evalFor env (ForStmt (VarInit decls) Nothing (Just expr) stmt) =
+	evalStmt env (VarDeclStmt decls) >> evalExpr env expr >> evalStmt env stmt
+evalFor env (ForStmt (ExprInit exprinit) Nothing (Just expr) stmt) =
+	evalExpr env exprinit >> evalExpr env expr >> evalStmt env stmt
+evalFor env (ForStmt NoInit (Just expr1) (Just expr2) stmt) =
+	evalExpr env expr1 >> evalExpr env expr2 >> evalStmt env stmt
+evalFor env (ForStmt (VarInit decls) (Just expr1) (Just expr2) stmt) =
+	evalStmt env (VarDeclStmt decls) >> evalExpr env expr1 >> evalExpr env expr2 >> evalStmt env stmt
+evalFor env (ForStmt (ExprInit exprinit) (Just expr1) (Just expr2) stmt) =
+	evalExpr env exprinit >> evalExpr env expr1 >> evalExpr env expr2 >> evalStmt env stmt
 
 --
 -- Types and boilerplate
