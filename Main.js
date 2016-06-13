@@ -13,3 +13,6 @@ for (var i = 0; x < 3; i = i+1){
 	}
 }
 
+function casa(a, b){}
+
+var c = function ovelha(){}

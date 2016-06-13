@@ -21,7 +21,10 @@ evalExpr env (InfixExpr op expr1 expr2) = do
 evalExpr env (AssignExpr OpAssign (LVar var) expr) = do
     stateLookup env var -- crashes if the variable doesn't exist
     e <- evalExpr env expr
-    setVar var e	
+    setVar var e
+evalExpr env (FuncExpr Nothing args block) = return $ Func "" (map show args)
+evalExpr env (FuncExpr (Just (Id str)) args block) = return $ Func str (map show args)
+	
 
 evalStmt :: StateT -> Statement -> StateTransformer Value
 evalStmt env EmptyStmt = return Nil
@@ -40,7 +43,12 @@ evalStmt env (WhileStmt expr stmt) =
 	evalExpr env expr >> evalStmt env stmt
 evalStmt env (DoWhileStmt stmt expr) = 
 	evalStmt env stmt >> evalExpr env expr
-evalStmt env forstmt = evalFor env forstmt
+evalStmt env forstmt =
+	evalFor env forstmt
+evalStmt env (FunctionStmt id [] block) =
+	varDecl env (VarDecl id Nothing) >> evalStmt env (BlockStmt block)
+evalStmt env (FunctionStmt id (arg:args) block) =
+	varDecl env (VarDecl id (Just (FuncExpr (Just id) (arg:args) block))) >> varDecl env (VarDecl arg Nothing) >> evalStmt env (FunctionStmt id args block) >> evalStmt env (BlockStmt block)
 	
 --loop ou case
 --evalStmt env (BrealStmt Nothing)
@@ -123,6 +131,7 @@ evalFor env (ForStmt (VarInit decls) (Just expr1) (Just expr2) stmt) =
 	evalStmt env (VarDeclStmt decls) >> evalExpr env expr1 >> evalExpr env expr2 >> evalStmt env stmt
 evalFor env (ForStmt (ExprInit exprinit) (Just expr1) (Just expr2) stmt) =
 	evalExpr env exprinit >> evalExpr env expr1 >> evalExpr env expr2 >> evalStmt env stmt
+evalFor env ow = return Nil
 
 --
 -- Types and boilerplate
