@@ -58,10 +58,8 @@ evalStmt env (FunctionStmt id [] block) =
 	varDecl env (VarDecl id Nothing) >> evalStmt env (BlockStmt block)
 evalStmt env (FunctionStmt id (arg:args) block) =
 	varDecl env (VarDecl id (Just (FuncExpr (Just id) (arg:args) block))) >> varDecl env (VarDecl arg Nothing) >> evalStmt env (FunctionStmt id args block) >> evalStmt env (BlockStmt block)
-
---loop ou case
---evalStmt env (BrealStmt Nothing)
---evalStmt env (BrealStmt (Just id))
+evalStmt env (BreakStmt Nothing) = return Nil
+evalStmt env (BreakStmt (Just id)) = return $ String "break"
 
 
 -- Do not touch this one :)
@@ -88,6 +86,7 @@ infixOp env OpEq   (Bool v1) (Bool v2) = return $ Bool $ v1 == v2
 infixOp env OpNEq  (Bool v1) (Bool v2) = return $ Bool $ v1 /= v2
 infixOp env OpLAnd (Bool v1) (Bool v2) = return $ Bool $ v1 && v2
 infixOp env OpLOr  (Bool v1) (Bool v2) = return $ Bool $ v1 || v2
+infixOp env OpAdd  (List v1) (List v2) = return $ List $ v1 ++ v2
 
 --
 -- Environment and auxiliary functions
@@ -140,7 +139,33 @@ evalFor env (ForStmt (VarInit decls) (Just expr1) (Just expr2) stmt) =
 	evalStmt env (VarDeclStmt decls) >> evalExpr env expr1 >> evalExpr env expr2 >> evalStmt env stmt
 evalFor env (ForStmt (ExprInit exprinit) (Just expr1) (Just expr2) stmt) =
 	evalExpr env exprinit >> evalExpr env expr1 >> evalExpr env expr2 >> evalStmt env stmt
---evalFor env ow = return Nil
+
+head :: [a] -> Maybe a
+head [] = Nothing
+head (h:tl) = Just h
+
+tail :: [a] -> Maybe [a]
+tail [] = Nothing
+tail (h:tl) = Just tl
+
+concat :: [[a]] -> [a]
+concat [] = []
+concat (h:tl) = h ++ (Main.concat tl)
+
+len :: [a] -> Int
+len list = auxLen list 0
+
+auxLen :: [a] -> Int -> Int
+auxLen [] n = n
+auxLen (h:tl) n = (auxLen tl (n+1)) 
+
+eq :: Eq a => [a] -> [a] -> Bool
+eq [] [] = True
+eq [] list = False
+eq list [] = False
+eq (h1:t1s) (h2:t2s)
+ | h1 == h2 = eq t1s t2s
+ | otherwise = False
 
 --
 -- Types and boilerplate

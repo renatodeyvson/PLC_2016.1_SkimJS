@@ -10,6 +10,7 @@ do {
 for (var i = 0; x < 3; i = i+1){
 	while (false){
 		y + z;
+		break;
 	}
 }
 
@@ -19,3 +20,5 @@ var c = function ovelha(){}
 var a = [12,true,13];
 
 x + y;
+
+break x;
