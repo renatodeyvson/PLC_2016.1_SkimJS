@@ -87,6 +87,16 @@ infixOp env OpNEq  (Bool v1) (Bool v2) = return $ Bool $ v1 /= v2
 infixOp env OpLAnd (Bool v1) (Bool v2) = return $ Bool $ v1 && v2
 infixOp env OpLOr  (Bool v1) (Bool v2) = return $ Bool $ v1 || v2
 infixOp env OpAdd  (List v1) (List v2) = return $ List $ v1 ++ v2
+infixOp env OpEq  (List (a:v1)) (List (b:v2)) = do
+  Bool resultList <- infixOp env OpEq  (List v1) (List v2)
+  Bool result <- infixOp env OpEq a b
+  return $ Bool $ and [resultList, result]
+infixOp env OpEq   (List [a]) (List [b]) = do
+  Bool result <- infixOp env OpEq a b
+  return $ Bool $ result
+infixOp env OpEq (List []) (List v2) = return $ Bool $ False
+infixOp env OpEq (List v1) (List []) = return $ Bool $ False
+infixOp env OpEq (List []) (List []) = return $ Bool $ True
 
 --
 -- Environment and auxiliary functions
@@ -157,7 +167,7 @@ len list = auxLen list 0
 
 auxLen :: [a] -> Int -> Int
 auxLen [] n = n
-auxLen (h:tl) n = (auxLen tl (n+1)) 
+auxLen (h:tl) n = (auxLen tl (n+1))
 
 eq :: Eq a => [a] -> [a] -> Bool
 eq [] [] = True
